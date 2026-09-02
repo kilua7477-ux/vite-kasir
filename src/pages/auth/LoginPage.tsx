@@ -27,13 +27,13 @@ export default function LoginPage() {
     const errs = validate();
     if (Object.keys(errs).length) { setErrors(errs); return; }
     setLoading(true);
-    const ok = await login(form.email, form.password);
+    const { error } = await login(form.email, form.password);
     setLoading(false);
-    if (ok) {
+    if (!error) {
       toast.success('Selamat datang!');
       navigate('/dashboard');
     } else {
-      toast.error('Email atau password salah');
+      toast.error(error === 'Invalid login credentials' ? 'Email atau password salah' : error);
     }
   };
 
