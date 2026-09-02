@@ -20,7 +20,7 @@ export default function CashierPage() {
   const [paid, setPaid] = useState('');
   const [payModal, setPayModal] = useState(false);
   const [successModal, setSuccessModal] = useState(false);
-  const [lastTx, setLastTx] = useState<ReturnType<typeof addTransaction> | null>(null);
+  const [lastTx, setLastTx] = useState<Awaited<ReturnType<typeof addTransaction>> | null>(null);
 
   const filteredProducts = products.filter(p =>
     p.stock > 0 &&
@@ -59,17 +59,27 @@ export default function CashierPage() {
 
   const removeFromCart = (id: string) => setCart(prev => prev.filter(i => i.product.id !== id));
 
-  const handlePay = () => {
+  const handlePay = async () => {
     if (cart.length === 0) { toast.error('Keranjang kosong'); return; }
     if (Number(paid) < total) { toast.error('Uang tidak cukup'); return; }
-    const tx = addTransaction({ items: cart, subtotal, discount: discountAmt, tax: taxAmt, total, paid: Number(paid), change, cashier: user?.name ?? '' });
-    setLastTx(tx);
-    setPayModal(false);
-    setSuccessModal(true);
-    setCart([]);
-    setDiscount(0);
-    setPaid('');
-    toast.success('Transaksi berhasil!');
+    
+    // Set status loading bisa ditambahkan disini, tapi untuk kesederhanaan
+    // kita await saja langsung
+    const txId = toast.loading('Memproses transaksi...');
+    const tx = await addTransaction({ items: cart, subtotal, discount: discountAmt, tax: taxAmt, total, paid: Number(paid), change, cashier: user?.name ?? '' });
+    toast.dismiss(txId);
+
+    if (tx) {
+      setLastTx(tx);
+      setPayModal(false);
+      setSuccessModal(true);
+      setCart([]);
+      setDiscount(0);
+      setPaid('');
+      toast.success('Transaksi berhasil!');
+    } else {
+      toast.error('Gagal memproses transaksi');
+    }
   };
 
   const openPay = () => {
