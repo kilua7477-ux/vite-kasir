@@ -91,17 +91,38 @@ export default function CashierPage() {
     <div className="flex flex-col lg:flex-row gap-4 h-full">
       {/* Produk */}
       <div className="flex-1 space-y-4">
-        <div className="flex gap-2">
-          <div className="relative flex-1">
+        <div className="flex flex-col gap-3">
+          <div className="relative">
             <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
             <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Cari produk..."
-              className="w-full pl-9 pr-4 py-2 text-sm rounded-xl border border-gray-200 dark:border-gray-700 dark:bg-gray-800 outline-none focus:border-indigo-500" />
+              className="w-full pl-9 pr-4 py-2.5 text-sm rounded-xl border border-gray-200 dark:border-gray-700 dark:bg-gray-800 outline-none focus:border-indigo-500 transition-colors" />
           </div>
-          <select value={catFilter} onChange={e => setCatFilter(e.target.value)}
-            className="px-3 py-2 text-sm rounded-xl border border-gray-200 dark:border-gray-700 dark:bg-gray-800 outline-none focus:border-indigo-500">
-            <option value="">Semua</option>
-            {categories.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
-          </select>
+          
+          <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-hide">
+            <button
+              onClick={() => setCatFilter('')}
+              className={`px-4 py-2 text-sm rounded-xl whitespace-nowrap transition-colors border ${
+                !catFilter
+                  ? 'bg-indigo-600 text-white border-indigo-600'
+                  : 'bg-white dark:bg-gray-900 border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800'
+              }`}
+            >
+              Semua
+            </button>
+            {categories.map(c => (
+              <button
+                key={c.id}
+                onClick={() => setCatFilter(c.id)}
+                className={`px-4 py-2 text-sm rounded-xl whitespace-nowrap transition-colors border ${
+                  catFilter === c.id
+                    ? 'bg-indigo-600 text-white border-indigo-600'
+                    : 'bg-white dark:bg-gray-900 border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800'
+                }`}
+              >
+                {c.name}
+              </button>
+            ))}
+          </div>
         </div>
 
         {filteredProducts.length === 0 ? <EmptyState message="Produk tidak ditemukan" /> : (

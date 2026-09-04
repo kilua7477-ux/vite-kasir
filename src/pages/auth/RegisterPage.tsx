@@ -5,16 +5,17 @@ import { useAuth } from '../../context/AuthContext';
 import { Spinner } from '../../components/ui/Spinner';
 import toast from 'react-hot-toast';
 
-export default function LoginPage() {
-  const { login } = useAuth();
+export default function RegisterPage() {
+  const { register } = useAuth();
   const navigate = useNavigate();
-  const [form, setForm] = useState({ email: 'admin@kasir.com', password: 'admin123' });
+  const [form, setForm] = useState({ name: '', email: '', password: '' });
   const [showPass, setShowPass] = useState(false);
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
 
   const validate = () => {
     const e: Record<string, string> = {};
+    if (!form.name.trim()) e.name = 'Nama wajib diisi';
     if (!form.email) e.email = 'Email wajib diisi';
     else if (!/\S+@\S+\.\S+/.test(form.email)) e.email = 'Format email tidak valid';
     if (!form.password) e.password = 'Password wajib diisi';
@@ -27,17 +28,22 @@ export default function LoginPage() {
     const errs = validate();
     if (Object.keys(errs).length) { setErrors(errs); return; }
     setLoading(true);
-    const { error } = await login(form.email, form.password);
+    const { error, needsEmailVerification } = await register(form.name, form.email, form.password);
     setLoading(false);
+    
     if (!error) {
-      toast.success('Selamat datang!');
-      navigate('/dashboard');
+      if (needsEmailVerification) {
+        toast.success('Pendaftaran berhasil! Silakan cek email Anda untuk verifikasi.', { duration: 5000 });
+      } else {
+        toast.success('Pendaftaran berhasil!');
+      }
+      navigate('/login');
     } else {
-      toast.error(error === 'Invalid login credentials' ? 'Email atau password salah' : error);
+      toast.error(error);
     }
   };
 
-  const field = (key: 'email' | 'password') => ({
+  const field = (key: 'name' | 'email' | 'password') => ({
     value: form[key],
     onChange: (e: React.ChangeEvent<HTMLInputElement>) => {
       setForm(f => ({ ...f, [key]: e.target.value }));
@@ -57,11 +63,18 @@ export default function LoginPage() {
         </div>
 
         <div className="bg-white dark:bg-gray-900 rounded-2xl shadow-xl shadow-gray-100 dark:shadow-none border border-gray-100 dark:border-gray-800 p-8">
-          <h2 className="text-xl font-semibold mb-6">Masuk ke Akun</h2>
+          <h2 className="text-xl font-semibold mb-6">Daftar Akun Baru</h2>
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
+              <label className="block text-sm font-medium mb-1.5">Nama Lengkap</label>
+              <input type="text" {...field('name')} placeholder="Budi Santoso"
+                className={`w-full px-4 py-2.5 rounded-xl border text-sm transition-colors outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 dark:bg-gray-800 dark:border-gray-700
+                  ${errors.name ? 'border-red-400' : 'border-gray-200 dark:border-gray-700'}`} />
+              {errors.name && <p className="text-red-500 text-xs mt-1">{errors.name}</p>}
+            </div>
+            <div>
               <label className="block text-sm font-medium mb-1.5">Email</label>
-              <input type="email" {...field('email')} placeholder="admin@kasir.com"
+              <input type="email" {...field('email')} placeholder="email@contoh.com"
                 className={`w-full px-4 py-2.5 rounded-xl border text-sm transition-colors outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 dark:bg-gray-800 dark:border-gray-700
                   ${errors.email ? 'border-red-400' : 'border-gray-200 dark:border-gray-700'}`} />
               {errors.email && <p className="text-red-500 text-xs mt-1">{errors.email}</p>}
@@ -81,18 +94,13 @@ export default function LoginPage() {
             </div>
             <button type="submit" disabled={loading}
               className="w-full py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl font-medium transition-colors flex items-center justify-center gap-2 disabled:opacity-70 mt-2">
-              {loading ? <><Spinner size="sm" /> Memproses...</> : 'Masuk'}
+              {loading ? <><Spinner size="sm" /> Memproses...</> : 'Daftar'}
             </button>
           </form>
-          <div className="mt-5 p-3 bg-gray-50 dark:bg-gray-800 rounded-xl text-xs text-gray-500 dark:text-gray-400">
-            <p className="font-medium mb-1">Demo Akun:</p>
-            <p>Email: admin@kasir.com</p>
-            <p>Password: admin123</p>
-          </div>
           <div className="mt-6 text-center text-sm text-gray-500 dark:text-gray-400">
-            Belum punya akun?{' '}
-            <Link to="/register" className="text-indigo-600 hover:text-indigo-700 font-medium">
-              Daftar di sini
+            Sudah punya akun?{' '}
+            <Link to="/login" className="text-indigo-600 hover:text-indigo-700 font-medium">
+              Masuk di sini
             </Link>
           </div>
         </div>

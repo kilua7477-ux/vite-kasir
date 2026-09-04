@@ -6,6 +6,7 @@ interface AuthCtx {
   user: User | null;
   loading: boolean;
   login: (email: string, password: string) => Promise<{ error: string | null }>;
+  register: (name: string, email: string, password: string) => Promise<{ error: string | null, needsEmailVerification?: boolean }>;
   logout: () => void;
 }
 
@@ -55,11 +56,31 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return { error: error?.message || null };
   };
 
+  const register = async (name: string, email: string, password: string) => {
+    const { data, error } = await supabase.auth.signUp({
+      email,
+      password,
+      options: {
+        data: {
+          name,
+          role: 'kasir', // default role
+        },
+      },
+    });
+    
+    // Supabase returns a session if auto-login is enabled, 
+    // but if email confirmation is on, it will return data.user and no session.
+    return { 
+      error: error?.message || null, 
+      needsEmailVerification: data?.user?.identities?.length === 0 || !data.session
+    };
+  };
+
   const logout = async () => {
     await supabase.auth.signOut();
   };
 
-  return <AuthContext value={{ user, loading, login, logout }}>{children}</AuthContext>;
+  return <AuthContext value={{ user, loading, login, register, logout }}>{children}</AuthContext>;
 }
 
 export const useAuth = () => {
